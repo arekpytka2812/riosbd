@@ -1,0 +1,116 @@
+name: BankSystemRiOSBD
+
+version: '3'
+
+services:
+
+  prod_master:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prod_master
+    environment:
+      POSTGRES_DB: prod_master
+      POSTGRES_USER: master_user
+      POSTGRES_PASSWORD: master_password
+    ports:
+      - "5432:5432"
+    networks:
+      prod_network:
+        ipv4_address: 192.168.0.2
+    volumes:
+      - ./prod/master/init.sql:/docker-entrypoint-initdb.d/00_init.sql
+
+  prod_slave_1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prod_slave_1
+    environment:
+      POSTGRES_USER: slave_user
+      POSTGRES_PASSWORD: slave_password
+      POSTGRES_DB: prod_slave_1
+    ports:
+      - "5433:5432"
+    depends_on:
+      - prod_master
+    networks:
+      prod_network:
+        ipv4_address: 192.168.0.3
+    volumes:
+      - ./prod/slave/init.sql:/docker-entrypoint-initdb.d/00_init.sql
+
+  prod_slave_2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prod_slave_2
+    environment:
+      POSTGRES_USER: slave_user
+      POSTGRES_PASSWORD: slave_password
+      POSTGRES_DB: prod_slave_2
+    ports:
+      - "5434:5432"
+    depends_on:
+      - prod_master
+    networks:
+      prod_network:
+        ipv4_address: 192.168.0.4
+    volumes:
+      - ./prod/slave/init.sql:/docker-entrypoint-initdb.d/00_init.sql
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: test
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: test
+    volumes:
+      - ./test_data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+    networks:
+      prod_network:
+        ipv4_address: 192.168.0.5
+#    restart: always
+
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dev
+    environment:
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: dev
+    volumes:
+      - ./dev_data:/var/lib/postgresql/data
+    ports:
+      - "5436:5432"
+    networks:
+      prod_network:
+        ipv4_address: 192.168.0.6
+#    restart: always
+
+  load_balancer:
+    image: haproxy:2.7
+    container_name: load_balancer
+    networks:
+      prod_network:
+        ipv4_address: 192.168.0.100
+    ports:
+      - "5437:5437" # read port
+      - "5438:5438" # write port
+    volumes:
+      - ./prod/lb/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+
+networks:
+  prod_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.0.0/24
+
