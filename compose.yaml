@@ -59,53 +59,41 @@ services:
     volumes:
       - ./prod/slave/init.sql:/docker-entrypoint-initdb.d/00_init.sql
 
-  test:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: test
-    environment:
-      POSTGRES_USER: test_user
-      POSTGRES_PASSWORD: test_password
-      POSTGRES_DB: test
-    volumes:
-      - ./test_data:/var/lib/postgresql/data
-    ports:
-      - "5435:5432"
-    networks:
-      prod_network:
-        ipv4_address: 192.168.0.5
-#    restart: always
+#  test:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    container_name: test
+#    environment:
+#      POSTGRES_USER: test_user
+#      POSTGRES_PASSWORD: test_password
+#      POSTGRES_DB: test
+#    volumes:
+#      - ./test_data:/var/lib/postgresql/data
+#    ports:
+#      - "5435:5432"
+#    networks:
+#      prod_network:
+#        ipv4_address: 192.168.0.5
+##    restart: always
 
-  dev:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: dev
-    environment:
-      POSTGRES_USER: dev_user
-      POSTGRES_PASSWORD: dev_password
-      POSTGRES_DB: dev
-    volumes:
-      - ./dev_data:/var/lib/postgresql/data
-    ports:
-      - "5436:5432"
-    networks:
-      prod_network:
-        ipv4_address: 192.168.0.6
-#    restart: always
-
-  load_balancer:
-    image: haproxy:2.7
-    container_name: load_balancer
-    networks:
-      prod_network:
-        ipv4_address: 192.168.0.100
-    ports:
-      - "5437:5437" # read port
-      - "5438:5438" # write port
-    volumes:
-      - ./prod/lb/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+#  dev:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    container_name: dev
+#    environment:
+#      POSTGRES_USER: dev_user
+#      POSTGRES_PASSWORD: dev_password
+#      POSTGRES_DB: dev
+#    volumes:
+#      - ./dev_data:/var/lib/postgresql/data
+#    ports:
+#      - "5436:5432"
+#    networks:
+#      prod_network:
+#        ipv4_address: 192.168.0.6
+##    restart: always
 
 networks:
   prod_network:
